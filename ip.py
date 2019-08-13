@@ -6,7 +6,7 @@ from rubik import *
 class ip_header_layout(layout):
     srcip = Bit(32)
     dstip = Bit(32)
-
+    option_len = Bit(16)
 
 class ip_header_layout2(layout):
     pass
@@ -19,8 +19,7 @@ class ip_header_layout3(layout):
 class op1(layout):
     type_id = Bit(16, const=0x1)
     port = Bit(16)
-    option_len = Bit(16)
-    option = Bit(option_len << 2)
+    option = Bit(ip_header_layout.option_len << 2)
 
 
 class op2(layout):

@@ -8,11 +8,14 @@ class Bit(Expr):
     def __init__(self, length, const=None):
         self.length = length
         self.const = const
+        self.hdr_name = None
+        self.name = None
 
+    def literal(self, proto_name):
+        return f'{proto_name}_{self.hdr_name}->{self.name}'
 
 class layout:
     pass
-
 
 class Layout:
     @staticmethod
@@ -33,12 +36,19 @@ class Layout:
         return SeqLayout([self, other])
 
     def __getattr__(self, name):
-        return Field(name)
+        return Field(name, self)
 
 
 class StructLayout(Layout):
     def __init__(self, layout_type):
         self.layout_type = layout_type
+        self.name_implant()
+
+    def name_implant(self):
+        hdr_name = self.layout_type.__name__
+        for name, field in self.iter_field():
+            field.hdr_name = hdr_name
+            field.name = name
 
     def iter_field(self):
         for name, field in self.layout_type.__dict__.items():

@@ -49,3 +49,7 @@ class Op(Expr):
 class Field(Expr):
     def __init__(self, name):
         self.name = name
+
+
+class Cursor(Expr):
+    pass

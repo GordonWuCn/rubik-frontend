@@ -66,15 +66,24 @@ class While:
         self.guard = guard
 
     def __rshift__(self, any):
-        return WhileAnyLayout(self.guard, any.choice_list)
+        return WhileAnyLayout(self.guard, any.choice_list, any.prefix_length)
 
 
 class Any(Layout):
     def __init__(self, *choice_list):
         self.choice_list = [self.wrap_raw(choice) for choice in choice_list]
+        self.prefix_length = None
+        for choice in self.choice_list:
+            _name, first_field = next(choice.iter_field())
+            assert first_field.const is not None
+            if self.prefix_length is None:
+                self.prefix_length = first_field.length
+            else:
+                assert first_field == self.prefix_length
 
 
 class WhileAnyLayout(Layout):
-    def __init__(self, guard, choice_list):
+    def __init__(self, guard, choice_list, prefix_length):
         self.guard = guard
         self.choice_list = choice_list
+        self.prefix_length = prefix_length

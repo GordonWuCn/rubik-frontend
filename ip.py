@@ -9,26 +9,27 @@ class ip_header_layout(layout):
 
 
 class ip_header_layout2(layout):
+    pass
+
+
+class ip_header_layout3(layout):
+    pass
+
+
+class op1(layout):
     type_id = Bit(16, const=0x1)
     port = Bit(16)
     option_len = Bit(16)
     option = Bit(option_len << 2)
 
 
-class ip_header_layout3(layout):
+class op2(layout):
     type_id = Bit(16, const=0x0)
 
 
-class op1(layout):
-    pass
-
-
-class op2(layout):
-    pass
-
-
 class op3(layout):
-    pass
+    type_id = Bit(16, const=0x42)
+    dummy = Bit(128)
 
 
 def ip_parser():
@@ -36,7 +37,7 @@ def ip_parser():
     ip.header = ip_header_layout
     ip.header += If(ip.header.srcip ==
                     1) >> ip_header_layout2 >> Else() >> ip_header_layout3
-    ip.header += While(ip.header.cursor <
+    ip.header += While(ip.cursor <
                        ip.header.option_len) >> Any(op1, op2, op3)
     # ip.selector = ([ip.header.srcip], [ip.header.dstip])
     # ip.temp = ip_temp_layout
@@ -73,3 +74,53 @@ def ip_parser():
 #     srcip = bit(32)
 #     dstip = bit(32)
 # stack.event.on_every_high_udp = If(stack.gtp_udp) >> Assign(...) + callback(on_every_high_udp_layout)
+
+#
+# In [1]: from ip import ip_parser
+
+# In [2]: p = ip_parser()
+
+# In [3]: p.header
+# Out[3]: <rubik.layout.SeqLayout at 0x1aaf989df60>
+
+# In [4]: p.header.layout_list
+# Out[4]: 
+# [<rubik.layout.StructLayout at 0x1aaf989da58>,
+#  <rubik.layout.IfElseLayout at 0x1aaf989da90>,
+#  <rubik.layout.WhileAnyLayout at 0x1aaf989df98>]
+
+# In [5]: p.header.layout_list[1].true
+# Out[5]: <rubik.layout.StructLayout at 0x1aaf989dc88>
+
+# In [6]: p.header.layout_list[2].choice_list
+# Out[6]: 
+# [<rubik.layout.StructLayout at 0x1aaf989dfd0>,
+#  <rubik.layout.StructLayout at 0x1aaf98c6048>,
+#  <rubik.layout.StructLayout at 0x1aaf98c6080>]
+
+# In [7]: p.header.layout_list[2].prefix_length
+# Out[7]: 16
+
+# In [8]: p.header.layout_list[2].choice_list[0].iter_field()
+# Out[8]: <generator object StructLayout.iter_field at 0x000001AAF97CDCF0>
+
+# In [9]: list(p.header.layout_list[2].choice_list[0].iter_field())
+# Out[9]: 
+# [('type_id', <rubik.layout.Bit at 0x1aaf9896a20>),
+#  ('port', <rubik.layout.Bit at 0x1aaf9896a58>),
+#  ('option_len', <rubik.layout.Bit at 0x1aaf9896a90>),
+#  ('option', <rubik.layout.Bit at 0x1aaf98806d8>)]
+
+# In [10]: list(p.header.layout_list[2].choice_list[0].iter_field())[3][1].const
+
+# In [11]: list(p.header.layout_list[2].choice_list[0].iter_field())[3][1].length
+# Out[11]: <rubik.expr.Op at 0x1aaf9896b00>
+
+# In [12]: list(p.header.layout_list[2].choice_list[0].iter_field())[3][1].length.op
+# Out[12]: 'lshift'
+
+# In [13]: list(p.header.layout_list[2].choice_list[0].iter_field())[3][1].length.lhs
+# Out[13]: <rubik.layout.Bit at 0x1aaf9896a90>
+
+# In [14]: list(p.header.layout_list[2].choice_list[0].iter_field())[3][1].length.rhs
+# Out[14]: 2
